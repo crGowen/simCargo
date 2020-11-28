@@ -1,0 +1,14 @@
+{
+    "compilerOptions": {
+        "noImplicitAny": true,
+        "removeComments": true,
+        "preserveConstEnums": true,
+        "outDir": "../js",
+        "rootDir": "./",
+        "lib": ["ESNext", "ES6", "DOM"],
+        "sourceMap": true
+    },
+    "include": [
+        "**/*.ts"
+    ]
+}
