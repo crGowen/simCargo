@@ -245,15 +245,15 @@ class CargoPort {
 class CargoCraft {
     private name: string;
     private size: string;
-    private emptyWgt: number; // TENS of lb
-    private maxSpd: number; // knots
-    private costUsd: number; // THOUSANDS of dollars
-    private maxAlt: number; // THOUSANDS of feet
-    private estLbsPer100NM: number; // TENS of lb
-    private emergencyLbs: number; // TENS of lb
+    private emptyWgt: number;
+    private maxSpd: number;
+    private costUsd: number; 
+    private maxAlt: number; 
+    private estLbsPerNM: number; 
+    private emergencyLbs: number; 
     private totalCargoCapacity: number;
-    private cargoSlots: {name: string, capacity: number}[]; // capacity in lb
-    private flightConfigs: {weight: number, altitude: number, rwyLength: number, firmSurface: boolean}[]; // weight in TENS of lb
+    private cargoSlots: {name: string, capacity: number}[];
+    private flightConfigs: {weight: number, altitude: number, rwyLength: number, firmSurface: boolean}[];
 
     constructor(n: string,
         t:string,
@@ -270,7 +270,7 @@ class CargoCraft {
         this.maxSpd = mS;
         this.costUsd = cD;
         this.maxAlt = mA;
-        this.estLbsPer100NM = estLbs;
+        this.estLbsPerNM = estLbs;
         this.emergencyLbs = emergencyL;
         this.cargoSlots = [];
         this.flightConfigs = [];

@@ -1,4 +1,21 @@
 Everything before the first underscore is ingored by data read. Use this space to include any comments (do not include an underscore in this comment space).
 
-_KASE, 7800, 5400, y, 40.0, -120.0, y, m,
-_KAAA, 200, 2500, n, 23.1, -102.5, n, s,
+Runway length must be the MINIMUM of all runways available at port.
+ILS y/n is for any runway (if the airport has 5 rwys and only one has ILS - y)
+Firm surface is a MINIMUM of all runways available. If even one grass rwy appears it is n.
+
+Size = s (upto private jet); m (upto A320); b (upto 747-8I)
+
+<name> <altitude> <rway length> <ils available> <lat> <long> <firm?> <max aircraft size supported>
+
+_KASE, 7800, 8000, y, 39.2, -106.9, y, s,
+_KANK, 7400, 7300, n, 38.5, -106.0, y, s,
+_NC08, 2000, 2700, n, 35.1, -83.7, n, s,
+_KRHP, 1700, 5500, n, 35.2, -83.9, y, s,
+
+_KDZJ, 1900, 5000, n, 34.9, -84.0, y, s,
+_KCHA, 700, 5600, n, 35.0, -85.2, y, m,
+_KAPT, 600, 3500, n, 35.1, -85.6, y, s,
+_TN67, 900, 2500, n, 35.2, -86.1, n, s,
+
+_KBNA, 600, 7700, y, 36.1, -86.7, y, b,

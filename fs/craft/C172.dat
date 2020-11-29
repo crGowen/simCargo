@@ -1,6 +1,7 @@
 Everything before the plus sign is ignored by data read (do not include the plus sign anywhere else). Use this space to include any comments.
 
-+Cessna_172_with_G1000,
++
+Cessna_172_with_G1000,
 s,
 1690,
 130,
