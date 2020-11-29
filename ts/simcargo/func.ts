@@ -157,7 +157,7 @@ class SimCargoController {
             parseInt(props[3]),
             parseInt(props[4]),
             parseInt(props[5]),
-            parseInt(props[6]),
+            parseFloat(props[6]),
             parseInt(props[7])
         ));
         

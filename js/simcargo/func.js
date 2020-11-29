@@ -132,7 +132,7 @@ var SimCargoController = (function () {
         var index = SimCargoController.cargoCrafts.length;
         craft = craft.split("+")[1];
         var props = craft.split(",");
-        SimCargoController.cargoCrafts.push(new CargoCraft(props[0], props[1], parseInt(props[2]), parseInt(props[3]), parseInt(props[4]), parseInt(props[5]), parseInt(props[6]), parseInt(props[7])));
+        SimCargoController.cargoCrafts.push(new CargoCraft(props[0], props[1], parseInt(props[2]), parseInt(props[3]), parseInt(props[4]), parseInt(props[5]), parseFloat(props[6]), parseInt(props[7])));
         var numSlots = parseInt(props[8]);
         for (var i = 0; i < numSlots; i++) {
             SimCargoController.cargoCrafts[index].addCargoSlot(props[9 + i * 2], parseInt(props[10 + i * 2]));
