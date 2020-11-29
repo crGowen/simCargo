@@ -1,5 +1,7 @@
-Cessna_208_B_Grand_Caravan,
-t,
+Everything before the plus sign is ignored by data read (do not include the plus sign anywhere else). Use this space to include any comments.
+
++Cessna_208_B_Grand_Caravan,
+s,
 5150,
 170,
 230000,

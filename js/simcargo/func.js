@@ -18,6 +18,7 @@ var SimCargoController = (function () {
                 }
             }
         };
+        xhr.overrideMimeType("text/plain");
         xhr.open("GET", file, true);
         xhr.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
         xhr.send(null);
@@ -101,20 +102,35 @@ var SimCargoController = (function () {
         }
         return newStr;
     };
-    SimCargoController.parseAirportsFile = function (file) {
-        SimCargoController.getFile(file, true);
+    SimCargoController.parseAirportsFile = function () {
+        if (SimCargoController.tempIndex === SimCargoController.portFiles.length) {
+            SimCargoController.tempIndex = 0;
+            SimCargoController.parseCraftFile();
+            return;
+        }
+        ;
+        SimCargoController.getFile("/fs/ports/" + SimCargoController.portFiles[SimCargoController.tempIndex] + ".dat", true);
+        SimCargoController.tempIndex++;
     };
-    SimCargoController.parseCraftFile = function (file) {
-        SimCargoController.getFile(file, false);
+    SimCargoController.parseCraftFile = function () {
+        if (SimCargoController.tempIndex === SimCargoController.craftFiles.length) {
+            SimCargoController.tempIndex = 0;
+            return;
+        }
+        ;
+        SimCargoController.getFile("/fs/craft/" + SimCargoController.craftFiles[SimCargoController.tempIndex] + ".dat", false);
+        SimCargoController.tempIndex++;
     };
     SimCargoController.appendNewPorts = function (ports) {
         var portList = ports.split(" ");
         for (var i = 1; i < portList.length; i++) {
             SimCargoController.cargoPorts.push(new CargoPort(portList[i]));
         }
+        SimCargoController.parseAirportsFile();
     };
     SimCargoController.appendNewCraft = function (craft) {
         var index = SimCargoController.cargoCrafts.length;
+        craft = craft.split("+")[1];
         var props = craft.split(",");
         SimCargoController.cargoCrafts.push(new CargoCraft(props[0], props[1], parseInt(props[2]), parseInt(props[3]), parseInt(props[4]), parseInt(props[5]), parseInt(props[6]), parseInt(props[7])));
         var numSlots = parseInt(props[8]);
@@ -127,12 +143,13 @@ var SimCargoController = (function () {
         for (var i = 0; i < numSlots; i++) {
             SimCargoController.cargoCrafts[index].addFlightConfig(parseInt(props[offset + i * 4]), parseInt(props[offset + i * 4 + 1]), parseInt(props[offset + i * 4 + 2]), (props[offset + i * 4 + 3] === "y"));
         }
+        SimCargoController.parseCraftFile();
     };
     SimCargoController.getDistanceBetweenPorts = function (portA, portB) {
         var deltaLat = Math.abs(portA.getLat() - portB.getLat());
         var deltaLong = Math.abs(portA.getLong() - portB.getLong());
         if (deltaLong === 0)
-            deltaLong = 1;
+            deltaLong = 0.1;
         var a = Math.pow(Math.sin(deltaLat / 360 * Math.PI), 2);
         a += Math.cos(portA.getLat() / 180 * Math.PI) * Math.cos(portB.getLat() / 180 * Math.PI) * Math.pow(Math.sin(deltaLong / 360 * Math.PI), 2);
         var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
@@ -145,12 +162,8 @@ var SimCargoController = (function () {
         SimCargoController.pilotWgt = 170;
         SimCargoController.portFiles = ["us"];
         SimCargoController.craftFiles = ["C208", "C172"];
-        for (var i = 0; i < this.portFiles.length; i++) {
-            SimCargoController.parseAirportsFile("/fs/ports/" + SimCargoController.portFiles[i] + ".dat");
-        }
-        for (var i = 0; i < this.craftFiles.length; i++) {
-            SimCargoController.parseCraftFile("/fs/craft/" + SimCargoController.craftFiles[i] + ".dat");
-        }
+        SimCargoController.tempIndex = 0;
+        SimCargoController.parseAirportsFile();
     };
     return SimCargoController;
 }());
@@ -165,6 +178,8 @@ var CargoPort = (function () {
             lat: parseFloat(props[4]),
             long: parseFloat(props[5])
         };
+        this.firmSurface = (props[6] === "y");
+        this.accomodatesAircraftUptoSize = props[7];
     }
     CargoPort.prototype.getLat = function () {
         return this.location.lat;
@@ -177,7 +192,7 @@ var CargoPort = (function () {
 var CargoCraft = (function () {
     function CargoCraft(n, t, eW, mS, cD, mA, estLbs, emergencyL) {
         this.name = n;
-        this.type = t;
+        this.size = t;
         this.emptyWgt = eW;
         this.maxSpd = mS;
         this.costUsd = cD;
@@ -186,9 +201,11 @@ var CargoCraft = (function () {
         this.emergencyLbs = emergencyL;
         this.cargoSlots = [];
         this.flightConfigs = [];
+        this.totalCargoCapacity = 0;
     }
     CargoCraft.prototype.addCargoSlot = function (n, c) {
         this.cargoSlots.push({ name: n, capacity: c });
+        this.totalCargoCapacity += c;
     };
     CargoCraft.prototype.addFlightConfig = function (w, a, l, f) {
         this.flightConfigs.push({ weight: w, altitude: a, rwyLength: l, firmSurface: f });

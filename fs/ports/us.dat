@@ -1,2 +1,4 @@
-_KASE, 7800, 5400, y, 40.0, -120.0,
-_KAAA, 200, 2500, n, 23.1, -102.5,
+Everything before the first underscore is ingored by data read. Use this space to include any comments (do not include an underscore in this comment space).
+
+_KASE, 7800, 5400, y, 40.0, -120.0, y, m,
+_KAAA, 200, 2500, n, 23.1, -102.5, n, s,

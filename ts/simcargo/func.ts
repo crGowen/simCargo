@@ -5,6 +5,7 @@ class SimCargoController {
     private static pilotWgt: number;
     private static portFiles: string[];
     private static craftFiles: string[];
+    private static tempIndex: number;
 
 
     static getFile(file:string, ports:boolean) {
@@ -23,6 +24,7 @@ class SimCargoController {
                 }                
             }
         }
+        xhr.overrideMimeType("text/plain");
 
         xhr.open("GET", file, true);
 
@@ -113,13 +115,25 @@ class SimCargoController {
         return newStr;
     }
 
-    static parseAirportsFile(file:string) {
-            SimCargoController.getFile(file, true);
+    static parseAirportsFile() {
+        if (SimCargoController.tempIndex === SimCargoController.portFiles.length) {
+            SimCargoController.tempIndex = 0;
+            SimCargoController.parseCraftFile();
+            return;
+        };
+        SimCargoController.getFile("/fs/ports/" + SimCargoController.portFiles[SimCargoController.tempIndex] + ".dat", true);
+        SimCargoController.tempIndex++;
     }
 
-    static parseCraftFile(file:string) {
-        SimCargoController.getFile(file, false);
-}
+    static parseCraftFile() {
+        if (SimCargoController.tempIndex === SimCargoController.craftFiles.length) {
+            SimCargoController.tempIndex = 0;
+            return;
+        };
+
+        SimCargoController.getFile("/fs/craft/" + SimCargoController.craftFiles[SimCargoController.tempIndex] + ".dat", false);
+        SimCargoController.tempIndex++;
+    }   
 
     static appendNewPorts(ports:string) {
         var portList = ports.split(" ");
@@ -127,10 +141,13 @@ class SimCargoController {
         for (let i = 1; i < portList.length; i++) {
             SimCargoController.cargoPorts.push(new CargoPort(portList[i]));
         }
+
+        SimCargoController.parseAirportsFile();
     }
 
     static appendNewCraft(craft:string) {
         var index = SimCargoController.cargoCrafts.length;
+        craft = craft.split("+")[1];
         var props = craft.split(",");
 
         SimCargoController.cargoCrafts.push(new CargoCraft(
@@ -156,14 +173,16 @@ class SimCargoController {
 
         for (let i = 0; i < numSlots; i++) {
             SimCargoController.cargoCrafts[index].addFlightConfig(parseInt(props[offset + i*4]), parseInt(props[offset + i*4 + 1]), parseInt(props[offset + i*4 + 2]), (props[offset + i*4 + 3]==="y"));
-        }        
+        }
+        
+        SimCargoController.parseCraftFile();
     }
 
     static getDistanceBetweenPorts(portA:CargoPort, portB:CargoPort) {
         var deltaLat = Math.abs(portA.getLat() - portB.getLat());
         var deltaLong = Math.abs(portA.getLong() - portB.getLong());
 
-        if (deltaLong===0) deltaLong = 1;
+        if (deltaLong===0) deltaLong = 0.1;
 
         // Haversine
         let a = Math.pow(Math.sin(deltaLat / 360 * Math.PI), 2);
@@ -183,14 +202,10 @@ class SimCargoController {
         
         SimCargoController.portFiles = ["us"];
         SimCargoController.craftFiles = ["C208", "C172"];
-        
-        for (let i = 0; i < this.portFiles.length; i++) {
-            SimCargoController.parseAirportsFile("/fs/ports/" + SimCargoController.portFiles[i] + ".dat");
-        }
 
-        for (let i = 0; i < this.craftFiles.length; i++) {
-            SimCargoController.parseCraftFile("/fs/craft/" + SimCargoController.craftFiles[i] + ".dat");
-        }
+        SimCargoController.tempIndex = 0;
+        
+        SimCargoController.parseAirportsFile();
     }
 }
 
@@ -200,6 +215,8 @@ class CargoPort {
     private minRwyLength: number;
     private fullILS: boolean;
     private location: {lat: number, long: number};
+    private firmSurface: boolean;
+    private accomodatesAircraftUptoSize: string;
 
     constructor(port: string) {
         var props = port.split(",");
@@ -212,6 +229,8 @@ class CargoPort {
             lat: parseFloat(props[4]),
             long: parseFloat(props[5])
         };
+        this.firmSurface = (props[6]==="y");
+        this.accomodatesAircraftUptoSize = props[7];
     }
 
     public getLat() {
@@ -225,13 +244,14 @@ class CargoPort {
 
 class CargoCraft {
     private name: string;
-    private type: string;
+    private size: string;
     private emptyWgt: number; // TENS of lb
     private maxSpd: number; // knots
     private costUsd: number; // THOUSANDS of dollars
     private maxAlt: number; // THOUSANDS of feet
     private estLbsPer100NM: number; // TENS of lb
     private emergencyLbs: number; // TENS of lb
+    private totalCargoCapacity: number;
     private cargoSlots: {name: string, capacity: number}[]; // capacity in lb
     private flightConfigs: {weight: number, altitude: number, rwyLength: number, firmSurface: boolean}[]; // weight in TENS of lb
 
@@ -245,7 +265,7 @@ class CargoCraft {
         emergencyL: number) {
 
         this.name = n;
-        this.type = t;
+        this.size = t;
         this.emptyWgt = eW;
         this.maxSpd = mS;
         this.costUsd = cD;
@@ -254,10 +274,12 @@ class CargoCraft {
         this.emergencyLbs = emergencyL;
         this.cargoSlots = [];
         this.flightConfigs = [];
+        this.totalCargoCapacity = 0;
     }
 
     public addCargoSlot(n:string, c: number) {
         this.cargoSlots.push({name: n, capacity: c});
+        this.totalCargoCapacity += c;
     }
 
     public addFlightConfig(w:number, a: number, l: number, f: boolean) {
