@@ -2,6 +2,7 @@ class SimCargoController {
     private static cargoPorts: CargoPort[];
     private static cargoCrafts: CargoCraft[];
     private static fudge: number;
+    private static pilotWgt: number;
     private static portFiles: string[];
     private static craftFiles: string[];
 
@@ -100,6 +101,7 @@ class SimCargoController {
                 case '9':
                 case '+':
                 case '-':
+                case ',':
                     newStr += str.charAt(i);
                     break;
                 case '_':
@@ -120,40 +122,40 @@ class SimCargoController {
 }
 
     static appendNewPorts(ports:string) {
-        var portList = ports.split(".");
+        var portList = ports.split(" ");
         
-        for (let i = 0; i < portList.length; i++) {
-            if (portList[i].length === 13) SimCargoController.cargoPorts.push(new CargoPort(portList[i]));
+        for (let i = 1; i < portList.length; i++) {
+            SimCargoController.cargoPorts.push(new CargoPort(portList[i]));
         }
     }
 
     static appendNewCraft(craft:string) {
         var index = SimCargoController.cargoCrafts.length;
-        var props = craft.split(".");
+        var props = craft.split(",");
 
         SimCargoController.cargoCrafts.push(new CargoCraft(
+            props[0],
             props[1],
-            props[3],
             parseInt(props[2]),
+            parseInt(props[3]),
             parseInt(props[4]),
             parseInt(props[5]),
             parseInt(props[6]),
-            parseInt(props[7]),
-            parseInt(props[8])
+            parseInt(props[7])
         ));
         
-        let numSlots = parseInt(props[9]);
+        let numSlots = parseInt(props[8]);
 
         for (let i = 0; i < numSlots; i++) {
-            SimCargoController.cargoCrafts[index].addCargoSlot(props[10 + i*2], parseInt(props[11 + i*2]));
+            SimCargoController.cargoCrafts[index].addCargoSlot(props[9 + i*2], parseInt(props[10 + i*2]));
         }
 
-        let offset = 10 + numSlots*2;
+        let offset = 9 + numSlots*2;
         numSlots = parseInt(props[offset]);
         offset++;
 
         for (let i = 0; i < numSlots; i++) {
-            SimCargoController.cargoCrafts[index].addFlightConfig(parseInt(props[offset + i*3]), props[offset + i*3 + 1], props[offset + i*3 + 2]);
+            SimCargoController.cargoCrafts[index].addFlightConfig(parseInt(props[offset + i*4]), parseInt(props[offset + i*4 + 1]), parseInt(props[offset + i*4 + 2]), (props[offset + i*4 + 3]==="y"));
         }        
     }
 
@@ -177,6 +179,7 @@ class SimCargoController {
         SimCargoController.cargoCrafts = [];
 
         SimCargoController.fudge = 1.15;
+        SimCargoController.pilotWgt = 170;
         
         SimCargoController.portFiles = ["us"];
         SimCargoController.craftFiles = ["C208", "C172"];
@@ -193,61 +196,30 @@ class SimCargoController {
 
 class CargoPort {
     private name: string;
-    private type: string;
-    private alt: string;
-    private position: {lat: number, long: number};
+    private alt: number;
+    private minRwyLength: number;
+    private fullILS: boolean;
+    private location: {lat: number, long: number};
 
-    constructor(raw: string) {
-        this.name = raw.substr(0,4);
-        this.type = raw.substr(4,1);
-        this.alt = raw.substr(5,1);
-        this.position = {
-            lat: parseInt(raw.substr(6,3)),
-            long: parseInt(raw.substr(9, 4))
+    constructor(port: string) {
+        var props = port.split(",");
+
+        this.name = props[0];
+        this.alt = parseInt(props[1]);
+        this.minRwyLength = parseInt(props[2]);
+        this.fullILS = (props[3]==="y");
+        this.location = {
+            lat: parseFloat(props[4]),
+            long: parseFloat(props[5])
         };
     }
 
-    public displayInfo() {
-        let size = "undef";
-        let aRating = "undef";
-
-        switch(this.type) {
-            case 'h':
-                size = "heavy";
-                break;
-            case 'r':
-                size = "regional";
-                break;
-            case 's':
-                size = "small";
-                break;
-            case 't':
-                size = "tiny";
-                break;
-        }
-
-        switch(this.alt) {
-            case 'h':
-                aRating = "high";
-                break;
-            case 'm':
-                aRating = "medium";
-                break;
-            case 's':
-                aRating = "near sea-level";
-                break;
-        }
-
-        let buildStr = `${this.name}: ${size} sized aiport, at ${aRating} altitude, located at [${this.position.lat}, ${this.position.long}].`;
-        console.log(buildStr);
-    }
-
     public getLat() {
-        return this.position.lat;
+        return this.location.lat;
     }
 
     public getLong() {
-        return this.position.long;
+        return this.location.long;
     }
 }
 
@@ -261,7 +233,7 @@ class CargoCraft {
     private estLbsPer100NM: number; // TENS of lb
     private emergencyLbs: number; // TENS of lb
     private cargoSlots: {name: string, capacity: number}[]; // capacity in lb
-    private flightConfigs: {weight: number, port: string, alt: string}[]; // weight in TENS of lb
+    private flightConfigs: {weight: number, altitude: number, rwyLength: number, firmSurface: boolean}[]; // weight in TENS of lb
 
     constructor(n: string,
         t:string,
@@ -284,41 +256,11 @@ class CargoCraft {
         this.flightConfigs = [];
     }
 
-    public displayInfo() {
-        let fType = "undef";
-
-        switch(this.type) {
-            case 'p':
-                fType = "propeller";
-                break;
-            case 't':
-                fType = "turboprop";
-                break;
-            case 's':
-                fType = "small jet";
-                break;
-            case 'a':
-                fType = "airliner";
-                break;
-        }
-
-        let buildStr = `${this.name}: ${fType} craft\nEmpty Weight: ${this.emptyWgt}0lb\nMax Speed: ${this.maxSpd}kt\nMax Alt: ${this.maxAlt},000ft\nValue: ${this.costUsd},000USD\nFuel per 100NM: ${this.estLbsPer100NM}0lb\nEmergency Fuel: ${this.emergencyLbs}0lb`;
-        console.log(buildStr);
-        console.log("--- cargo slots ---")
-        for (let i = 0; i < this.cargoSlots.length; i++) {
-            console.log(this.cargoSlots[i].name + ": " + this.cargoSlots[i].capacity + "lb");
-        }
-        console.log("--- flight configs ---")
-        for (let i = 0; i < this.flightConfigs.length; i++) {
-            console.log("Max take off: " + this.flightConfigs[i].weight + "0lb ::: Airport Type: " + this.flightConfigs[i].port + " ::: Altitude: " + this.flightConfigs[i].alt);
-        }
-    }
-
     public addCargoSlot(n:string, c: number) {
         this.cargoSlots.push({name: n, capacity: c});
     }
 
-    public addFlightConfig(w:number, portType: string, altRating: string) {
-        this.flightConfigs.push({weight: w, port: portType, alt: altRating});
+    public addFlightConfig(w:number, a: number, l: number, f: boolean) {
+        this.flightConfigs.push({weight: w, altitude: a, rwyLength: l, firmSurface: f});
     }
 }
