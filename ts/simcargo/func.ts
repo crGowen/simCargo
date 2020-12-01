@@ -193,6 +193,31 @@ class SimCargoController {
         return c * 3440.1 * SimCargoController.fudge;
     }
 
+    static generateDistancesList(port:CargoPort) {
+        var dList:{distance: number, cargoPort: CargoPort}[] = [];
+
+        for (let i = 0; i < SimCargoController.cargoPorts.length; i++) {
+            if (SimCargoController.cargoPorts[i] !== port) {
+                dList.push({
+                    distance: SimCargoController.getDistanceBetweenPorts(port, SimCargoController.cargoPorts[i]),
+                    cargoPort: SimCargoController.cargoPorts[i]
+                });
+            }
+        }
+
+        console.log(dList);
+    }
+
+    static getFuelReq(dist:number, craft:CargoCraft) {
+        return dist*craft.getFuelRate() + craft.getEmergencyFuelReq();
+    }
+
+    static getReqWgt(portA:CargoPort, portB:CargoPort, craft:CargoCraft, cargoWgt: number) {
+        let totalWgt = craft.getEmptyWgt() + cargoWgt + SimCargoController.pilotWgt;
+        totalWgt+= SimCargoController.getFuelReq(SimCargoController.getDistanceBetweenPorts(portA, portB), craft);
+        return totalWgt;
+    }
+
     static init() {
         SimCargoController.cargoPorts = [];
         SimCargoController.cargoCrafts = [];
@@ -275,6 +300,18 @@ class CargoCraft {
         this.cargoSlots = [];
         this.flightConfigs = [];
         this.totalCargoCapacity = 0;
+    }
+
+    public getEmptyWgt(){
+        return this.emptyWgt;
+    }
+
+    public getFuelRate() {
+        return this.estLbsPerNM;
+    }
+
+    public getEmergencyFuelReq() {
+        return this.emergencyLbs;
     }
 
     public addCargoSlot(n:string, c: number) {

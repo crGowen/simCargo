@@ -155,6 +155,26 @@ var SimCargoController = (function () {
         var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
         return c * 3440.1 * SimCargoController.fudge;
     };
+    SimCargoController.generateDistancesList = function (port) {
+        var dList = [];
+        for (var i = 0; i < SimCargoController.cargoPorts.length; i++) {
+            if (SimCargoController.cargoPorts[i] !== port) {
+                dList.push({
+                    distance: SimCargoController.getDistanceBetweenPorts(port, SimCargoController.cargoPorts[i]),
+                    cargoPort: SimCargoController.cargoPorts[i]
+                });
+            }
+        }
+        console.log(dList);
+    };
+    SimCargoController.getFuelReq = function (dist, craft) {
+        return dist * craft.getFuelRate() + craft.getEmergencyFuelReq();
+    };
+    SimCargoController.getReqWgt = function (portA, portB, craft, cargoWgt) {
+        var totalWgt = craft.getEmptyWgt() + cargoWgt + SimCargoController.pilotWgt;
+        totalWgt += SimCargoController.getFuelReq(SimCargoController.getDistanceBetweenPorts(portA, portB), craft);
+        return totalWgt;
+    };
     SimCargoController.init = function () {
         SimCargoController.cargoPorts = [];
         SimCargoController.cargoCrafts = [];
@@ -203,6 +223,15 @@ var CargoCraft = (function () {
         this.flightConfigs = [];
         this.totalCargoCapacity = 0;
     }
+    CargoCraft.prototype.getEmptyWgt = function () {
+        return this.emptyWgt;
+    };
+    CargoCraft.prototype.getFuelRate = function () {
+        return this.estLbsPerNM;
+    };
+    CargoCraft.prototype.getEmergencyFuelReq = function () {
+        return this.emergencyLbs;
+    };
     CargoCraft.prototype.addCargoSlot = function (n, c) {
         this.cargoSlots.push({ name: n, capacity: c });
         this.totalCargoCapacity += c;
