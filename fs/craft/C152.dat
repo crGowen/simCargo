@@ -1,0 +1,22 @@
+Everything before the plus sign is ignored by data read (do not include the plus sign anywhere else). Use this space to include any comments.
+
++
+Cessna_152,
+s,
+1080,
+110,
+60000,
+11000,
+0.7,
+30,
+
+1,
+
+Pax, 150,
+
+1,
+
+1600, 4300, 2600, n,
+
+
+

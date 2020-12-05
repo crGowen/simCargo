@@ -1,28 +1,24 @@
 Everything before the plus sign is ignored by data read (do not include the plus sign anywhere else). Use this space to include any comments.
 
 +
-Cessna_172_with_G1000,
+Cub_Crafter_X_Cub,
 s,
-1690,
-130,
-400000,
+1220,
+110,
+310000,
 11000,
-0.91,
+1.0,
 60,
 
-3,
+2,
 
-Seat_1, 150,
-Seat_2, 150,
-Cargo_cabin, 200,
+Pax, 150,
+Baggage, 200,
 
-5,
+2,
 
+2000, 4300, 2600, n,
 2200, 1800, 1800, n,
-2400, 2600, 3600, y,
-2300, 500, 2500, n,
-2200, 500, 2100, n,
-2550, 1900, 5000, y,
 
 
 

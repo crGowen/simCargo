@@ -7,9 +7,24 @@
     <link rel="stylesheet" type="text/css" href="/css/main.css">
     <link rel="shortcut icon" href="/fav.png">
     <title>simCargo</title>
-  </head>
-  <body>
+
     <script src="/js/base/short.js"></script>
     <script src="/js/simcargo/func.js"></script>
+  </head>
+  <body>
+    <div class="scApp" id="scAppCon">
+      <div class="scTitle" id="scTitleCon">TITLE</div>
+      <div class="scList" id="scListCon">
+      </div>
+      <div class="scButtons">
+        <div class="scButtons__flexContainer">
+          <div class="scButtons__btn" id="scLBtn" onclick="SimCargoController.lBtnClick()">Test btn</div>
+          <div class="scButtons__btn" id="scRBtn" onclick="SimCargoController.rBtnClick()">Test btn2</div>
+        </div>        
+      </div>
+    </div>    
+    <script>
+      SimCargoController.init();
+    </script>
   </body>
  </html>

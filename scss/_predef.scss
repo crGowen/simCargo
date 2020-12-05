@@ -1,6 +1,8 @@
 // basic predefines
 $behindPageColour: #DADADA;
+$pageColour: #EAEAEA;
 $primaryTextColour: #252525;
+$accentColour: steelblue;
 
 $fontBody: 'Raleway', sans-serif;
 $fontTitle: 'Saira Extra Condensed', sans-serif;
@@ -11,4 +13,14 @@ $fontHeader: 'Helvetica', sans-serif;
     -moz-user-select: none;
     -ms-user-select: none;
     user-select: none;
+}
+
+@mixin flexRow($justify: center) {
+    display: inline-flex; 
+
+    justify-content: $justify;
+
+    flex-wrap: nowrap;
+    flex-direction: row;
+    align-items: center;
 }
