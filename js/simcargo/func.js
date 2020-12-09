@@ -109,6 +109,7 @@ var SimCargoController = (function () {
             return;
         }
         ;
+        console.log("loading /fs/ports/" + SimCargoController.portFiles[SimCargoController.tempIndex] + ".dat ...");
         SimCargoController.getFile("/fs/ports/" + SimCargoController.portFiles[SimCargoController.tempIndex] + ".dat", true);
         SimCargoController.tempIndex++;
     };
@@ -119,6 +120,7 @@ var SimCargoController = (function () {
             return;
         }
         ;
+        console.log("loading /fs/craft/" + SimCargoController.craftFiles[SimCargoController.tempIndex] + ".dat ...");
         SimCargoController.getFile("/fs/craft/" + SimCargoController.craftFiles[SimCargoController.tempIndex] + ".dat", false);
         SimCargoController.tempIndex++;
     };
@@ -133,12 +135,12 @@ var SimCargoController = (function () {
         var index = SimCargoController.cargoCrafts.length;
         craft = craft.split("+")[1];
         var props = craft.split(",");
-        SimCargoController.cargoCrafts.push(new CargoCraft(props[0], props[1], parseInt(props[2]), parseInt(props[3]), parseInt(props[4]), parseInt(props[5]), parseFloat(props[6]), parseInt(props[7])));
-        var numSlots = parseInt(props[8]);
+        SimCargoController.cargoCrafts.push(new CargoCraft(props[0], props[1], parseInt(props[2]), parseInt(props[3]), parseInt(props[4]), parseInt(props[5]), parseFloat(props[6]), parseInt(props[7]), parseInt(props[8])));
+        var numSlots = parseInt(props[9]);
         for (var i = 0; i < numSlots; i++) {
-            SimCargoController.cargoCrafts[index].addCargoSlot(props[9 + i * 2], parseInt(props[10 + i * 2]));
+            SimCargoController.cargoCrafts[index].addCargoSlot(props[10 + i * 2], parseInt(props[11 + i * 2]));
         }
-        var offset = 9 + numSlots * 2;
+        var offset = 10 + numSlots * 2;
         numSlots = parseInt(props[offset]);
         offset++;
         for (var i = 0; i < numSlots; i++) {
@@ -172,7 +174,7 @@ var SimCargoController = (function () {
         var a = Math.pow(Math.sin(deltaLat / 360 * Math.PI), 2);
         a += Math.cos(portA.getLat() / 180 * Math.PI) * Math.cos(portB.getLat() / 180 * Math.PI) * Math.pow(Math.sin(deltaLong / 360 * Math.PI), 2);
         var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-        return c * 3440.1 * SimCargoController.fudge;
+        return Math.floor(c * 3440.1 * SimCargoController.fudge);
     };
     SimCargoController.generateDistancesList = function (port) {
         var dList = [];
@@ -187,7 +189,7 @@ var SimCargoController = (function () {
         console.log(dList);
     };
     SimCargoController.getFuelReq = function (dist, craft) {
-        return dist * craft.getFuelRate() + craft.getEmergencyFuelReq();
+        return Math.floor(dist * craft.getFuelRate() + craft.getEmergencyFuelReq());
     };
     SimCargoController.getReqWgt = function (portA, portB, craft, cargoWgt) {
         var totalWgt = craft.getEmptyWgt() + cargoWgt + SimCargoController.pilotWgt;
@@ -210,10 +212,22 @@ var SimCargoController = (function () {
                 break;
         }
     };
-    SimCargoController.addToUiList = function (id, l, c, r, selectable) {
+    SimCargoController.addToUiList = function (id, l, c, r, selectable, margins) {
+        if (margins === void 0) { margins = "a"; }
         var elemHandle = short.create("div", id, ["scList__item"]);
         if (selectable)
             elemHandle.classList.add("scList__item--hl");
+        switch (margins) {
+            case "b":
+                elemHandle.classList.add("scList__item--bottomMarginsOnly");
+                break;
+            case "n":
+                elemHandle.classList.add("scList__item--noMargins");
+                break;
+            case "t":
+                elemHandle.classList.add("scList__item--topMarginsOnly");
+                break;
+        }
         var textHandle = short.create("div", "", ["scList__text", "scList__text--left"]);
         textHandle.innerText = l;
         elemHandle.appendChild(textHandle);
@@ -231,41 +245,32 @@ var SimCargoController = (function () {
         if (rightBtn)
             short.byId("scRBtn").innerText = rightBtn;
     };
-    SimCargoController.generateCargoWeight = function () {
-        var maxWeight = 0;
-        for (var i = 0; i < SimCargoController.cargoCrafts.length; i++) {
-            if (SimCargoController.cargoCrafts[i].getIsOwned()) {
-                if (SimCargoController.cargoCrafts[i].getCargoCapacity() > maxWeight)
-                    maxWeight = SimCargoController.cargoCrafts[i].getCargoCapacity();
-            }
-        }
-        var wgtClass = "s";
-        if (maxWeight >= 600)
-            wgtClass = "h";
-        if (maxWeight >= 1000)
-            wgtClass = "m";
+    SimCargoController.generateCargoWeight = function (craft) {
         var lowerBoundWgt = 0;
-        switch (wgtClass) {
-            case "s":
-                lowerBoundWgt = 250;
-                break;
-            case "h":
-                lowerBoundWgt = 400;
-                break;
-            case "m":
-                lowerBoundWgt = 600;
-                break;
-        }
-        var cargoWgt = Math.floor(Math.random() * Math.min(lowerBoundWgt, maxWeight) / 50);
+        if (craft.getCargoCapacity() >= 1000)
+            lowerBoundWgt = 600;
+        else if (craft.getCargoCapacity() >= 600)
+            lowerBoundWgt = 400;
+        else
+            lowerBoundWgt = 250;
+        var cargoWgt = Math.floor(Math.random() * Math.min(lowerBoundWgt + 1, craft.getCargoCapacity() + 1) / 50);
         cargoWgt = cargoWgt * 50;
-        return cargoWgt;
+        return Math.max(20, cargoWgt);
     };
-    SimCargoController.getMaxRange = function (craft) {
-        var wgt = craft.getEmptyWgt() + SimCargoController.pilotWgt;
-        wgt = craft.getMaxTakeoffWgt() - wgt;
+    SimCargoController.getMaxRange = function (craft, cargoWgt, config) {
+        if (cargoWgt === void 0) { cargoWgt = 0; }
+        if (config === void 0) { config = -5; }
+        var wgt = craft.getEmptyWgt() + SimCargoController.pilotWgt + cargoWgt;
+        if (config > -5) {
+            wgt = craft.getFlightConfig(config).weight - wgt;
+        }
+        else {
+            wgt = craft.getMaxTakeoffWgt() - wgt;
+        }
+        wgt = Math.min(wgt, craft.getMaxFuel());
         wgt -= craft.getEmergencyFuelReq();
         wgt /= craft.getFuelRate();
-        return wgt;
+        return Math.floor(wgt);
     };
     SimCargoController.getMaxRangeFromCurrentPort = function () {
         var maxRange = 0;
@@ -277,26 +282,103 @@ var SimCargoController = (function () {
         }
         return maxRange;
     };
+    SimCargoController.buildValidAircraft = function (port) {
+        for (var i = 0; i < SimCargoController.cargoCrafts.length; i++) {
+            if (SimCargoController.cargoCrafts[i].getIsOwned() && SimCargoController.checkPortViability(port, SimCargoController.cargoCrafts[i]) > -1 && SimCargoController.checkPortViability(SimCargoController.currentAirport, SimCargoController.cargoCrafts[i]) > -1) {
+                if (SimCargoController.getMaxRange(SimCargoController.cargoCrafts[i]) * 2.8 > SimCargoController.getDistanceBetweenPorts(port, SimCargoController.currentAirport))
+                    SimCargoController.validAircraft.push(SimCargoController.cargoCrafts[i]);
+            }
+        }
+    };
+    SimCargoController.plotRoute = function (craft, wgt, job, portA, portB) {
+        if (portA === void 0) { portA = SimCargoController.currentAirport; }
+        if (portB === void 0) { portB = job.endingAt; }
+        if (job.flights.length >= 3)
+            return false;
+        var via = SimCargoController.checkPortViability(portA, craft);
+        if (SimCargoController.getDistanceBetweenPorts(portA, portB) <= SimCargoController.getMaxRange(craft, wgt, via)) {
+            job.addFlight(portA, portB, via);
+            return true;
+        }
+        else {
+            var distanceToTarget = 0;
+            var bestIndex = -1;
+            for (var i = 0; i < SimCargoController.nearbyAirports.length; i++) {
+                if (SimCargoController.checkPortViability(SimCargoController.nearbyAirports[i], craft) > -1
+                    && SimCargoController.getDistanceBetweenPorts(portA, SimCargoController.nearbyAirports[i]) <= SimCargoController.getMaxRange(craft, wgt, via)
+                    && SimCargoController.nearbyAirports[i] !== portB
+                    && SimCargoController.nearbyAirports[i] !== portA) {
+                    var tempDist = SimCargoController.getDistanceBetweenPorts(portB, SimCargoController.nearbyAirports[i]);
+                    if (distanceToTarget === 0 || tempDist < distanceToTarget) {
+                        distanceToTarget = tempDist;
+                        bestIndex = i;
+                    }
+                }
+            }
+            if (bestIndex < 0) {
+                return false;
+            }
+            job.addFlight(portA, SimCargoController.nearbyAirports[bestIndex], via);
+            return SimCargoController.plotRoute(craft, wgt, job, SimCargoController.nearbyAirports[bestIndex], portB);
+        }
+    };
     SimCargoController.generateJobs = function () {
-        var jobRangeLimit = SimCargoController.getMaxRangeFromCurrentPort() * 2.5;
+        SimCargoController.jobs = [];
+        var jobRangeLimit = SimCargoController.getMaxRangeFromCurrentPort() * 2.8;
         var minLat = SimCargoController.currentAirport.getLat() - SimCargoController.estimateDistanceLatLimit(jobRangeLimit);
         var maxLat = SimCargoController.currentAirport.getLat() + SimCargoController.estimateDistanceLatLimit(jobRangeLimit);
         var minLong = SimCargoController.currentAirport.getLong() - SimCargoController.estimateDistanceLongLimit(jobRangeLimit, SimCargoController.currentAirport.getLat());
         var maxLong = SimCargoController.currentAirport.getLong() + SimCargoController.estimateDistanceLongLimit(jobRangeLimit, SimCargoController.currentAirport.getLat());
-        var nearbyAirports = [];
+        SimCargoController.nearbyAirports = [];
         for (var i = 0; i < SimCargoController.cargoPorts.length; i++) {
             if (SimCargoController.cargoPorts[i].withinLatLimits(minLat, maxLat)) {
                 if (SimCargoController.cargoPorts[i].withinLongLimits(minLong, maxLong)) {
                     if (SimCargoController.getDistanceBetweenPorts(SimCargoController.currentAirport, SimCargoController.cargoPorts[i]) < jobRangeLimit
                         && SimCargoController.cargoPorts[i] !== SimCargoController.currentAirport)
-                        nearbyAirports.push(SimCargoController.cargoPorts[i]);
+                        SimCargoController.nearbyAirports.push(SimCargoController.cargoPorts[i]);
                 }
             }
         }
-        console.log(jobRangeLimit);
-        console.log(SimCargoController.currentAirport);
-        console.log(nearbyAirports);
-        console.log(SimCargoController.generateCargoWeight());
+        var abort = false;
+        var counter = 0;
+        for (var i = 0; i < 12 && !abort; i++) {
+            if (counter > 20 || SimCargoController.nearbyAirports.length < 1) {
+                console.log("Could not begin from " + SimCargoController.currentAirport.getCode() + ", going retry from another port...");
+                abort = true;
+            }
+            else {
+                counter++;
+                SimCargoController.validAircraft = [];
+                var valid = true;
+                var target = short.ranElem(SimCargoController.nearbyAirports);
+                while (SimCargoController.getDistanceBetweenPorts(SimCargoController.currentAirport, target) < 50) {
+                    target = short.ranElem(SimCargoController.nearbyAirports);
+                }
+                SimCargoController.buildValidAircraft(target);
+                if (SimCargoController.validAircraft.length > 0) {
+                    var tCraft = short.ranElem(SimCargoController.validAircraft);
+                    var cargoWgt = SimCargoController.generateCargoWeight(tCraft);
+                    SimCargoController.jobs.push(new CargoJob(tCraft, target, cargoWgt));
+                    if (!SimCargoController.plotRoute(tCraft, cargoWgt, SimCargoController.jobs[i])) {
+                        SimCargoController.jobs.pop();
+                        valid = false;
+                    }
+                    else {
+                        SimCargoController.jobs[i].calculatePay();
+                    }
+                }
+                else {
+                    valid = false;
+                }
+                if (!valid) {
+                    i--;
+                }
+                else {
+                    counter = 0;
+                }
+            }
+        }
+        return abort;
     };
     SimCargoController.checkPortViability = function (port, craft) {
         var config = -1;
@@ -325,14 +407,31 @@ var SimCargoController = (function () {
             case "j":
             case "J":
             case "jobs":
-                short.byId("scTitleCon").innerText = "Job List";
+                short.byId("scTitleConL").innerText = "Current Aiport: " + SimCargoController.currentAirport.getCode();
+                short.byId("scTitleConC").innerText = "Available Jobs";
+                short.byId("scTitleConR").innerText = "Balance: $" + short.formatNumberWithCommas(SimCargoController.money);
                 short.clearChildren(short.byId("scListCon"));
-                for (var i = 0; i < 10; i++) {
-                    SimCargoController.addToUiList("c" + i.toString(), "left", "mid", "right", true);
+                for (var i = 0; i < SimCargoController.jobs.length; i++) {
+                    SimCargoController.addToUiList("c" + i.toString(), "Deliver " + SimCargoController.jobs[i].cargoWgt + "lb to " + SimCargoController.jobs[i].endingAt.getCode(), "Distance: " + short.formatNumberWithCommas(SimCargoController.jobs[i].getDist()) + "NM", "pays $" + short.formatNumberWithCommas(SimCargoController.jobs[i].pay), true);
                 }
                 SimCargoController.setBtns("leftONE", "rightTWO");
                 SimCargoController.uiMode = "j";
                 break;
+            case "f":
+                short.byId("scTitleConL").innerText = "Current Aiport: " + SimCargoController.currentAirport.getCode();
+                short.byId("scTitleConC").innerText = "View Job";
+                short.byId("scTitleConR").innerText = "Balance: $" + short.formatNumberWithCommas(SimCargoController.money);
+                short.clearChildren(short.byId("scListCon"));
+                SimCargoController.addToUiList("ctitle", "Deliver " + SimCargoController.selectedJob.cargoWgt + "lb to " + SimCargoController.selectedJob.endingAt.getCode(), "Distance: " + short.formatNumberWithCommas(SimCargoController.selectedJob.getDist()) + "NM", "pays $" + short.formatNumberWithCommas(SimCargoController.selectedJob.pay), false);
+                SimCargoController.addToUiList("ccraft", SimCargoController.selectedJob.craft.getName(), "Max. altitude: " + short.formatNumberWithCommas(SimCargoController.selectedJob.craft.getMaxAlt()) + "ft", "Empty Weight: " + SimCargoController.selectedJob.craft.getEmptyWgt(), false);
+                for (var i = 0; i < SimCargoController.selectedJob.flights.length; i++) {
+                    SimCargoController.addToUiList("cf" + i.toString(), "------------------", "----------- FLIGHT " + (i + 1).toString() + "/" + SimCargoController.selectedJob.flights.length.toString() + " -----------", "------------------", false, "t");
+                    SimCargoController.addToUiList("ct" + i.toString(), "Take-off from " + SimCargoController.selectedJob.flights[i].origin.getCode(), "Location: " + SimCargoController.selectedJob.flights[0].origin.getLat().toPrecision(3) + ", " + SimCargoController.selectedJob.flights[0].origin.getLong().toPrecision(4), "Max. safe T-O weight: " + SimCargoController.selectedJob.craft.getFlightConfig(SimCargoController.selectedJob.flights[i].config).weight + "lb", false, "n");
+                    SimCargoController.addToUiList("cwe" + i.toString(), "Pilot Weight: " + SimCargoController.pilotWgt + "lb", "Cargo Weight: " + SimCargoController.selectedJob.cargoWgt + "lb", "Fuel Weight: " + SimCargoController.getFuelReq(SimCargoController.getDistanceBetweenPorts(SimCargoController.selectedJob.flights[i].origin, SimCargoController.selectedJob.flights[i].destination), SimCargoController.selectedJob.craft).toString() + "lb", false, "n");
+                    SimCargoController.addToUiList("cwt" + i.toString(), "", "Expected T-O Weight: " + SimCargoController.getReqWgt(SimCargoController.selectedJob.flights[i].origin, SimCargoController.selectedJob.flights[i].destination, SimCargoController.selectedJob.craft, SimCargoController.selectedJob.cargoWgt) + "lb", "", false, "n");
+                    SimCargoController.addToUiList("cl" + i.toString(), "Land at " + SimCargoController.selectedJob.flights[i].destination.getCode(), "Location: " + SimCargoController.selectedJob.endingAt.getLat().toPrecision(3) + ", " + SimCargoController.selectedJob.endingAt.getLong().toPrecision(4), "", false, "b");
+                }
+                SimCargoController.uiMode = "f";
         }
     };
     SimCargoController.listHandler = function (event) {
@@ -347,22 +446,33 @@ var SimCargoController = (function () {
         if (index < 0)
             return;
         switch (SimCargoController.uiMode) {
-            case 'j':
-                console.log("Job index = " + index.toString());
+            case "j":
+                SimCargoController.selectedJob = SimCargoController.jobs[index];
+                SimCargoController.updateUi("f");
                 break;
         }
     };
     SimCargoController.newGame = function (loc, craft) {
         if (loc === void 0) { loc = ""; }
         if (craft === void 0) { craft = ""; }
-        SimCargoController.cargoCrafts[2].buy();
+        var startingCraft = 2;
+        SimCargoController.cargoCrafts[startingCraft].buy();
         SimCargoController.money = 30000;
-        var startingPort = Math.floor(Math.random() * SimCargoController.cargoPorts.length);
-        while (SimCargoController.checkPortViability(SimCargoController.cargoPorts[startingPort], SimCargoController.cargoCrafts[2]) === -1) {
-            startingPort = Math.floor(Math.random() * SimCargoController.cargoPorts.length);
+        var startingPort = short.ranElem(SimCargoController.cargoPorts);
+        while (SimCargoController.checkPortViability(startingPort, SimCargoController.cargoCrafts[startingCraft]) === -1) {
+            startingPort = short.ranElem(SimCargoController.cargoPorts);
         }
-        SimCargoController.currentAirport = SimCargoController.cargoPorts[startingPort];
-        SimCargoController.generateJobs();
+        SimCargoController.currentAirport = startingPort;
+        console.log("Starting new game from port " + SimCargoController.currentAirport.getCode());
+        while (SimCargoController.generateJobs()) {
+            startingPort = short.ranElem(SimCargoController.cargoPorts);
+            while (SimCargoController.checkPortViability(startingPort, SimCargoController.cargoCrafts[startingCraft]) === -1) {
+                startingPort = short.ranElem(SimCargoController.cargoPorts);
+            }
+            SimCargoController.currentAirport = startingPort;
+            console.log("Retrying from port " + SimCargoController.currentAirport.getCode());
+        }
+        ;
     };
     SimCargoController.init = function () {
         SimCargoController.uiMode = "x";
@@ -376,12 +486,37 @@ var SimCargoController = (function () {
         short.byId("scListCon").addEventListener("click", SimCargoController.listHandler);
         SimCargoController.parseAirportsFile();
     };
+    SimCargoController.uiMode = 'x';
     return SimCargoController;
+}());
+var CargoJob = (function () {
+    function CargoJob(c, e, wgt) {
+        this.craft = c;
+        this.flights = [];
+        this.endingAt = e;
+        this.cargoWgt = wgt;
+        this.pay = 100;
+    }
+    CargoJob.prototype.addFlight = function (o, d, c) {
+        this.flights.push({ origin: o, destination: d, config: c });
+    };
+    CargoJob.prototype.getDist = function () {
+        return SimCargoController.getDistanceBetweenPorts(this.flights[0].origin, this.flights[this.flights.length - 1].destination);
+    };
+    CargoJob.prototype.calculatePay = function () {
+        this.pay = this.getDist() * 18;
+        this.pay *= (1 + this.flights.length / 10);
+        this.pay *= (1 + this.cargoWgt / 400);
+        this.pay = this.pay + 1000 + this.cargoWgt;
+        this.pay *= 4;
+        this.pay = Math.floor(this.pay);
+    };
+    return CargoJob;
 }());
 var CargoPort = (function () {
     function CargoPort(port) {
         var props = port.split(",");
-        this.name = props[0];
+        this.code = props[0];
         this.alt = parseInt(props[1]);
         this.minRwyLength = parseInt(props[2]);
         this.fullILS = (props[3] === "y");
@@ -392,6 +527,9 @@ var CargoPort = (function () {
         this.firmSurface = (props[6] === "y");
         this.accomodatesAircraftUptoSize = props[7];
     }
+    CargoPort.prototype.getCode = function () {
+        return this.code;
+    };
     CargoPort.prototype.getLat = function () {
         return this.location.lat;
     };
@@ -444,7 +582,7 @@ var CargoPort = (function () {
     return CargoPort;
 }());
 var CargoCraft = (function () {
-    function CargoCraft(n, t, eW, mS, cD, mA, estLbs, emergencyL) {
+    function CargoCraft(n, t, eW, mS, cD, mA, estLbs, emergencyL, fc) {
         this.name = n;
         this.size = t;
         this.emptyWgt = eW;
@@ -453,11 +591,21 @@ var CargoCraft = (function () {
         this.maxAlt = mA;
         this.estLbsPerNM = estLbs;
         this.emergencyLbs = emergencyL;
+        this.fuelCapacity = fc;
         this.cargoSlots = [];
         this.flightConfigs = [];
         this.totalCargoCapacity = 0;
         this.isOwned = false;
     }
+    CargoCraft.prototype.getMaxFuel = function () {
+        return this.fuelCapacity;
+    };
+    CargoCraft.prototype.getName = function () {
+        return this.name;
+    };
+    CargoCraft.prototype.getMaxAlt = function () {
+        return this.maxAlt;
+    };
     CargoCraft.prototype.buy = function () {
         this.isOwned = true;
     };

@@ -25,6 +25,27 @@ const short = {
 
     del: (elem:Element) => {if (elem) elem.parentNode.removeChild(elem); },
 
+    formatNumberWithCommas: (num: number) => {
+        let str = num.toString();
+        for (let i = str.length - 3; i > 0; i-= 3) {
+            str = str.substring(0, i) + "," + str.substring(i);
+        }
+
+        return str;
+    },
+
+    ranFlo: (start: number, end:number) => {
+        return Math.random() * (end - start) + start;
+    },
+
+    ranInt: (start: number, end:number) => {
+        return Math.floor(Math.random() * (end - start)) + start;
+    },
+
+    ranElem: (arr: any[]) => {
+        return arr[Math.floor(Math.random() * arr.length)];
+    },
+
     clearChildren: (elem:Element) => {
         while (elem.childNodes.length > 0) {
             elem.removeChild(elem.childNodes[0]);
