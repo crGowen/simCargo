@@ -88,6 +88,8 @@ body {
     margin-bottom: 0.4rem;
     border-radius: 0;
     border-bottom: 0.2rem;
+
+    @include predef.textSelect();
 }
 
 .scList__item--topMarginsOnly {
@@ -97,10 +99,21 @@ body {
     border-top: 0.2rem;
 }
 
-
-.scList__item--noMargins{
+.scList__item--noMargins {
     margin: 0 0.5%;
     border-radius: 0;
+
+    @include predef.textSelect();
+}
+
+.scList__item--purchased {
+    background-color: predef.$ownedColour;
+    color: predef.$pageColour;
+}
+
+.scList__item--selected {
+    background-color: predef.$selectedColour;
+    color: predef.$pageColour;
 }
 
 .scList__text {
@@ -109,6 +122,13 @@ body {
     line-height: 4rem;
     width: 32.1%;
     margin: 0 0.6%;
+}
+
+.scList__text--full {
+    text-align: center;
+    width: 98.8%;
+    font-size: 1rem;
+    color: predef.$warnColour;
 }
 
 .scList__text--left {
@@ -169,4 +189,8 @@ body {
         color: predef.$pageColour;
     }
 
+}
+
+.sc--faded {
+    opacity: 0.25;
 }

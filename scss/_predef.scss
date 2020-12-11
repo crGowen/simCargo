@@ -3,6 +3,9 @@ $behindPageColour: #DADADA;
 $pageColour: #EAEAEA;
 $primaryTextColour: #252525;
 $accentColour: steelblue;
+$selectedColour: #2244AA;
+$ownedColour: #6688AA;
+$warnColour: #AA3333;
 
 $fontBody: 'Raleway', sans-serif;
 $fontTitle: 'Saira Extra Condensed', sans-serif;
@@ -13,6 +16,13 @@ $fontHeader: 'Helvetica', sans-serif;
     -moz-user-select: none;
     -ms-user-select: none;
     user-select: none;
+}
+
+@mixin textSelect {
+    -webkit-user-select: text;
+    -moz-user-select: text;
+    -ms-user-select: text;
+    user-select: text;
 }
 
 @mixin flexRow($justify: center) {

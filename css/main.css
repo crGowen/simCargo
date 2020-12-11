@@ -90,6 +90,10 @@ body {
   margin-bottom: 0.4rem;
   border-radius: 0;
   border-bottom: 0.2rem;
+  -webkit-user-select: text;
+  -moz-user-select: text;
+  -ms-user-select: text;
+  user-select: text;
 }
 
 .scList__item--topMarginsOnly {
@@ -102,6 +106,20 @@ body {
 .scList__item--noMargins {
   margin: 0 0.5%;
   border-radius: 0;
+  -webkit-user-select: text;
+  -moz-user-select: text;
+  -ms-user-select: text;
+  user-select: text;
+}
+
+.scList__item--purchased {
+  background-color: #6688AA;
+  color: #EAEAEA;
+}
+
+.scList__item--selected {
+  background-color: #2244AA;
+  color: #EAEAEA;
 }
 
 .scList__text {
@@ -110,6 +128,13 @@ body {
   line-height: 4rem;
   width: 32.1%;
   margin: 0 0.6%;
+}
+
+.scList__text--full {
+  text-align: center;
+  width: 98.8%;
+  font-size: 1rem;
+  color: #AA3333;
 }
 
 .scList__text--left {
@@ -168,6 +193,10 @@ body {
 .scButtons__btn:active {
   background-color: #EAEAEA;
   color: #EAEAEA;
+}
+
+.sc--faded {
+  opacity: 0.25;
 }
 
 /*# sourceMappingURL=main.css.map */
