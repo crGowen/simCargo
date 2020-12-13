@@ -396,9 +396,9 @@ var SimCargoController = (function () {
         }
         var abort = false;
         var counter = 0;
-        for (var i = 0; i < 12 && !abort; i++) {
-            if (counter > 20 || SimCargoController.nearbyAirports.length < 1) {
-                console.log("No jobs available for any owned aircraft...");
+        for (var i = 0; i < 6 && !abort; i++) {
+            if (counter > 250 || SimCargoController.nearbyAirports.length < 1) {
+                console.log("No jobs available for any owned aircraft..." + counter);
                 abort = true;
             }
             else {
@@ -605,7 +605,12 @@ var SimCargoController = (function () {
     SimCargoController.newGame = function (loc, startingCraft) {
         if (loc === void 0) { loc = ""; }
         if (startingCraft === void 0) { startingCraft = 0; }
-        SimCargoController.cargoCrafts[startingCraft].buy();
+        for (var i = 0; i < SimCargoController.cargoCrafts.length; i++) {
+            if (i === startingCraft)
+                SimCargoController.cargoCrafts[i].buy();
+            else
+                SimCargoController.cargoCrafts[i].sell();
+        }
         SimCargoController.money = 15000;
         var startingPort = short.ranElem(SimCargoController.cargoPorts);
         while (SimCargoController.checkPortViability(startingPort, SimCargoController.cargoCrafts[startingCraft]) === -1 && Math.abs(startingPort.getLat()) > 57.5) {
@@ -633,7 +638,7 @@ var SimCargoController = (function () {
         SimCargoController.fudge = 1.15;
         SimCargoController.pilotWgt = 170;
         SimCargoController.portFiles = ["us"];
-        SimCargoController.craftFiles = ["C152", "XCub", "C172", "C208"];
+        SimCargoController.craftFiles = ["C152", "XCub", "C172", "BBG36", "C208"];
         SimCargoController.tempIndex = 0;
         short.byId("scListCon").addEventListener("click", SimCargoController.listHandler);
         SimCargoController.parseAirportsFile();

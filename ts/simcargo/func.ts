@@ -480,9 +480,9 @@ class SimCargoController {
 
         let abort = false;
         let counter = 0;
-        for (let i = 0; i < 12 && !abort; i++) {
-            if (counter > 20 || SimCargoController.nearbyAirports.length<1) {
-                console.log("No jobs available for any owned aircraft...");
+        for (let i = 0; i < 6 && !abort; i++) {
+            if (counter > 250 || SimCargoController.nearbyAirports.length<1) {
+                console.log("No jobs available for any owned aircraft..." + counter);
                 abort = true;
             } else {
             counter++;
@@ -721,7 +721,10 @@ class SimCargoController {
     }
 
     static newGame(loc: string = "", startingCraft: number = 0) {
-        SimCargoController.cargoCrafts[startingCraft].buy();
+        for (let i = 0 ; i < SimCargoController.cargoCrafts.length; i++) {
+            if (i === startingCraft) SimCargoController.cargoCrafts[i].buy();
+            else SimCargoController.cargoCrafts[i].sell();
+        }
 
         SimCargoController.money = 15000;
 
@@ -762,7 +765,7 @@ class SimCargoController {
         SimCargoController.pilotWgt = 170;
         
         SimCargoController.portFiles = ["us"];
-        SimCargoController.craftFiles = ["C152", "XCub", "C172", "C208"];
+        SimCargoController.craftFiles = ["C152", "XCub", "C172", "BBG36", "C208"];
 
         SimCargoController.tempIndex = 0;
 

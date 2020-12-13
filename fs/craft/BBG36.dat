@@ -1,0 +1,28 @@
+Everything before the plus sign is ignored by data read (do not include the plus sign anywhere else). Use this space to include any comments.
+
++
+Beechcraft_Bonanza_G36,
+s,
+2600,
+160,
+700000,
+14000,
+0.83,
+80,
+480,
+
+5,
+
+Front_Pax_Left, 50,
+Front_Pax_Right, 50,
+Baggage, 200,
+Rear_Pax_Left, 50,
+Rear_Pax_Left, 50,
+
+2,
+
+3200, 2000, 3700, n,
+3350, 1300, 5300, y,
+
+
+
