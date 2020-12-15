@@ -629,6 +629,8 @@ class SimCargoController {
                     SimCargoController.addToUiList("cnogpswarn", "Warning: the Cessna 152 does not have a GPS, you will need to plot a route with VFR and/or VOR/NDB navigation. Daytime flying recommended.", "", "", false, "x");
                 }
 
+                var ilsLine:string;
+
                 for (let i = 0; i < SimCargoController.selectedJob.flights.length; i++) {
                     SimCargoController.addToUiList("cf" + i.toString(), "------------------", "----------- FLIGHT " + (i+1).toString() + "/" + SimCargoController.selectedJob.flights.length.toString() + " -----------", "------------------", false, "t");
 
@@ -645,7 +647,12 @@ class SimCargoController {
 
                     if (Math.abs(SimCargoController.selectedJob.flights[0].destination.getLong()) >= 100) longPres = 6;
                     else longPres = 5;
-                    SimCargoController.addToUiList("cl" + i.toString(), "Land at " + SimCargoController.selectedJob.flights[i].destination.getCode(), "Location: " + SimCargoController.selectedJob.endingAt.getLat().toPrecision(5) + ", " + SimCargoController.selectedJob.endingAt.getLong().toPrecision(longPres), "", false, "b");
+
+                    ilsLine = "ILS landing unavailable";
+                    if(SimCargoController.selectedJob.flights[i].destination.hasIls())
+                        ilsLine = "ILS landing AVAILABLE";
+
+                    SimCargoController.addToUiList("cl" + i.toString(), "Land at " + SimCargoController.selectedJob.flights[i].destination.getCode(), "Location: " + SimCargoController.selectedJob.endingAt.getLat().toPrecision(5) + ", " + SimCargoController.selectedJob.endingAt.getLong().toPrecision(longPres), ilsLine, false, "b");
                 }
 
                 SimCargoController.setBtns("Back", "Complete Job");
@@ -836,6 +843,10 @@ class CargoPort {
         };
         this.firmSurface = (props[6]==="y");
         this.accomodatesAircraftUptoSize = props[7];
+    }
+
+    public hasIls(){
+        return this.fullILS;
     }
 
     public getCode() {
