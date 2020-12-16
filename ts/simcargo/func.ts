@@ -761,6 +761,41 @@ class SimCargoController {
         };
     }
 
+    static getNearbyPorts(p: CargoPort){
+        let cfg = SimCargoController.checkPortViability(p, SimCargoController.cargoCrafts[0]);
+        if (cfg < 0) return -1;
+
+        let rangeLimit = Math.min(180, SimCargoController.getMaxRange(SimCargoController.cargoCrafts[0], 50, cfg));
+
+        let minLat = p.getLat() - SimCargoController.estimateDistanceLatLimit(rangeLimit);
+        let maxLat = p.getLat() + SimCargoController.estimateDistanceLatLimit(rangeLimit);
+
+        let minLong = p.getLong() - SimCargoController.estimateDistanceLongLimit(rangeLimit, p.getLat());
+        let maxLong = p.getLong() + SimCargoController.estimateDistanceLongLimit(rangeLimit, p.getLat());
+
+        var portsNear = 0;
+
+        for (let i = 0; i < SimCargoController.cargoPorts.length; i++) {
+            if (SimCargoController.cargoPorts[i].withinLatLimits(minLat, maxLat))  {
+                if (SimCargoController.cargoPorts[i].withinLongLimits(minLong, maxLong)) {
+                    if (SimCargoController.getDistanceBetweenPorts(p, SimCargoController.cargoPorts[i]) < rangeLimit
+                    && SimCargoController.cargoPorts[i] !== p) portsNear++;
+                }                
+            }
+        }
+
+        return portsNear;
+    }
+
+    static testAllPorts(){
+        console.log("The following ports may have LESS than two ports visitable!");
+
+        for (let i = 0; i < SimCargoController.cargoPorts.length; i++) {
+            let x = SimCargoController.getNearbyPorts(SimCargoController.cargoPorts[i]);
+            if (x < 2 && x > -1) console.log(SimCargoController.cargoPorts[i]);
+        }
+    }
+
     static init() {
         SimCargoController.uiMode = "x";
 
