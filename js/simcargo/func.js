@@ -301,7 +301,9 @@ var SimCargoController = (function () {
     };
     SimCargoController.generateCargoWeight = function (craft) {
         var lowerBoundWgt = 0;
-        if (craft.getCargoCapacity() >= 1000)
+        if (craft.getCargoCapacity() >= 2000)
+            lowerBoundWgt = 1500;
+        else if (craft.getCargoCapacity() >= 1000)
             lowerBoundWgt = 600;
         else if (craft.getCargoCapacity() >= 600)
             lowerBoundWgt = 400;
@@ -397,7 +399,7 @@ var SimCargoController = (function () {
         var abort = false;
         var counter = 0;
         for (var i = 0; i < 6 && !abort; i++) {
-            if (counter > 250 || SimCargoController.nearbyAirports.length < 1) {
+            if (counter > 1250 || SimCargoController.nearbyAirports.length < 1) {
                 console.log("No jobs available for any owned aircraft..." + counter);
                 abort = true;
             }
@@ -531,7 +533,7 @@ var SimCargoController = (function () {
                     var longPres = 5;
                     if (Math.abs(SimCargoController.selectedJob.flights[0].origin.getLong()) >= 100)
                         longPres = 6;
-                    SimCargoController.addToUiList("ct" + i.toString(), "Take-off from " + SimCargoController.selectedJob.flights[i].origin.getCode(), "Location: " + SimCargoController.selectedJob.flights[0].origin.getLat().toPrecision(5) + ", " + SimCargoController.selectedJob.flights[0].origin.getLong().toPrecision(longPres), "Max. safe T-O weight: " + SimCargoController.selectedJob.craft.getFlightConfig(SimCargoController.selectedJob.flights[i].config).weight + "lb", false, "n");
+                    SimCargoController.addToUiList("ct" + i.toString(), "Take-off " + SimCargoController.selectedJob.flights[i].origin.getCode() + ", " + SimCargoController.selectedJob.flights[i].origin.getAlt() + "ft", "Location: " + SimCargoController.selectedJob.flights[0].origin.getLat().toPrecision(5) + ", " + SimCargoController.selectedJob.flights[0].origin.getLong().toPrecision(longPres), "Max. safe T-O weight: " + SimCargoController.selectedJob.craft.getFlightConfig(SimCargoController.selectedJob.flights[i].config).weight + "lb", false, "n");
                     SimCargoController.addToUiList("cwe" + i.toString(), "Pilot Weight: " + SimCargoController.pilotWgt + "lb", "Cargo Weight: " + SimCargoController.selectedJob.cargoWgt + "lb", "Fuel Weight: " + SimCargoController.getFuelReq(SimCargoController.getDistanceBetweenPorts(SimCargoController.selectedJob.flights[i].origin, SimCargoController.selectedJob.flights[i].destination), SimCargoController.selectedJob.craft).toString() + "lb", false, "n");
                     SimCargoController.addToUiList("cwt" + i.toString(), "", "Expected T-O Weight: " + SimCargoController.getReqWgt(SimCargoController.selectedJob.flights[i].origin, SimCargoController.selectedJob.flights[i].destination, SimCargoController.selectedJob.craft, SimCargoController.selectedJob.cargoWgt) + "lb", "", false, "n");
                     if (Math.abs(SimCargoController.selectedJob.flights[0].destination.getLong()) >= 100)
@@ -541,7 +543,7 @@ var SimCargoController = (function () {
                     ilsLine = "ILS landing unavailable";
                     if (SimCargoController.selectedJob.flights[i].destination.hasIls())
                         ilsLine = "ILS landing AVAILABLE";
-                    SimCargoController.addToUiList("cl" + i.toString(), "Land at " + SimCargoController.selectedJob.flights[i].destination.getCode(), "Location: " + SimCargoController.selectedJob.endingAt.getLat().toPrecision(5) + ", " + SimCargoController.selectedJob.endingAt.getLong().toPrecision(longPres), ilsLine, false, "b");
+                    SimCargoController.addToUiList("cl" + i.toString(), "Landing " + SimCargoController.selectedJob.flights[i].destination.getCode() + ", " + SimCargoController.selectedJob.flights[i].destination.getAlt() + "ft", "Location: " + SimCargoController.selectedJob.endingAt.getLat().toPrecision(5) + ", " + SimCargoController.selectedJob.endingAt.getLong().toPrecision(longPres), ilsLine, false, "b");
                 }
                 SimCargoController.setBtns("Back", "Complete Job");
                 SimCargoController.uiMode = "f";
@@ -634,11 +636,11 @@ var SimCargoController = (function () {
         }
         ;
     };
-    SimCargoController.getNearbyPorts = function (p) {
-        var cfg = SimCargoController.checkPortViability(p, SimCargoController.cargoCrafts[0]);
+    SimCargoController.getNearbyPorts = function (p, c) {
+        var cfg = SimCargoController.checkPortViability(p, c);
         if (cfg < 0)
             return -1;
-        var rangeLimit = Math.min(180, SimCargoController.getMaxRange(SimCargoController.cargoCrafts[0], 50, cfg));
+        var rangeLimit = Math.min(180, SimCargoController.getMaxRange(c, 50, cfg));
         var minLat = p.getLat() - SimCargoController.estimateDistanceLatLimit(rangeLimit);
         var maxLat = p.getLat() + SimCargoController.estimateDistanceLatLimit(rangeLimit);
         var minLong = p.getLong() - SimCargoController.estimateDistanceLongLimit(rangeLimit, p.getLat());
@@ -655,12 +657,12 @@ var SimCargoController = (function () {
         }
         return portsNear;
     };
-    SimCargoController.testAllPorts = function () {
-        console.log("The following ports may have LESS than two ports visitable!");
+    SimCargoController.testAllPorts = function (n) {
+        console.log("The following ports may have LESS than two ports visitable with " + SimCargoController.cargoCrafts[n].getName());
         for (var i = 0; i < SimCargoController.cargoPorts.length; i++) {
-            var x = SimCargoController.getNearbyPorts(SimCargoController.cargoPorts[i]);
+            var x = SimCargoController.getNearbyPorts(SimCargoController.cargoPorts[i], SimCargoController.cargoCrafts[n]);
             if (x < 2 && x > -1)
-                console.log(SimCargoController.cargoPorts[i]);
+                console.log(SimCargoController.cargoPorts[i].getCode() + " @ " + SimCargoController.cargoPorts[i].getAlt() + "ft");
         }
     };
     SimCargoController.init = function () {
@@ -671,7 +673,7 @@ var SimCargoController = (function () {
         SimCargoController.fudge = 1.15;
         SimCargoController.pilotWgt = 170;
         SimCargoController.portFiles = ["us"];
-        SimCargoController.craftFiles = ["C152", "XCub", "C172", "BBG36", "C208"];
+        SimCargoController.craftFiles = ["C152", "XCub", "C172", "BBG36", "C208", "DA62"];
         SimCargoController.tempIndex = 0;
         short.byId("scListCon").addEventListener("click", SimCargoController.listHandler);
         SimCargoController.parseAirportsFile();
@@ -745,8 +747,10 @@ var CargoPort = (function () {
                 return 0;
             case "m":
                 return 1;
-            case "b":
+            case "g":
                 return 2;
+            case "h":
+                return 3;
         }
     };
     CargoPort.prototype.withinLatLimits = function (lowerLat, upperLat) {
@@ -851,8 +855,10 @@ var CargoCraft = (function () {
                 return 0;
             case "m":
                 return 1;
-            case "b":
+            case "g":
                 return 2;
+            case "h":
+                return 3;
         }
     };
     return CargoCraft;

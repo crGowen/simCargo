@@ -1,0 +1,37 @@
+Everything before the plus sign is ignored by data read (do not include the plus sign anywhere else). Use this space to include any comments.
+
+flight config format: <takeoff weight>, <alt>, <rwy length>, <is firm surface?>,
+
++
+Diamond_DA62,
+m,
+3460,
+170,
+2200000,
+14000,
+0.7,
+90,
+534,
+
+7,
+
+Baggage_Nose_Left, 150,
+Baggage_Nose_Right, 150,
+Middle_Pax_Left, 100,
+Middle_Pax_Right, 100,
+Middle_Pax_Center, 150,
+Rear_Pax_Left, 150,
+Rear_Pax_Right, 150,
+
+4,
+
+5050, 500, 9000, y,
+4300, 6200, 3500, n,
+4300, 7500, 5000, n,
+4300, 9100, 7100, y,
+
+
+
+
+
+

@@ -369,7 +369,8 @@ class SimCargoController {
 
     static generateCargoWeight(craft: CargoCraft) {
         let lowerBoundWgt = 0;
-        if (craft.getCargoCapacity() >= 1000) lowerBoundWgt = 600;
+        if (craft.getCargoCapacity() >= 2000) lowerBoundWgt = 1500;
+        else if (craft.getCargoCapacity() >= 1000) lowerBoundWgt = 600;
         else if (craft.getCargoCapacity() >= 600) lowerBoundWgt = 400;
         else lowerBoundWgt = 250;
 
@@ -481,7 +482,7 @@ class SimCargoController {
         let abort = false;
         let counter = 0;
         for (let i = 0; i < 6 && !abort; i++) {
-            if (counter > 250 || SimCargoController.nearbyAirports.length<1) {
+            if (counter > 1250 || SimCargoController.nearbyAirports.length < 1) {
                 console.log("No jobs available for any owned aircraft..." + counter);
                 abort = true;
             } else {
@@ -639,7 +640,7 @@ class SimCargoController {
                     }
                     let longPres = 5; 
                     if (Math.abs(SimCargoController.selectedJob.flights[0].origin.getLong()) >= 100) longPres = 6; 
-                    SimCargoController.addToUiList("ct" + i.toString(), "Take-off from " + SimCargoController.selectedJob.flights[i].origin.getCode(), "Location: " + SimCargoController.selectedJob.flights[0].origin.getLat().toPrecision(5) + ", " + SimCargoController.selectedJob.flights[0].origin.getLong().toPrecision(longPres), "Max. safe T-O weight: " + SimCargoController.selectedJob.craft.getFlightConfig(SimCargoController.selectedJob.flights[i].config).weight + "lb", false, "n");
+                    SimCargoController.addToUiList("ct" + i.toString(), "Take-off " + SimCargoController.selectedJob.flights[i].origin.getCode() + ", " + SimCargoController.selectedJob.flights[i].origin.getAlt() + "ft", "Location: " + SimCargoController.selectedJob.flights[0].origin.getLat().toPrecision(5) + ", " + SimCargoController.selectedJob.flights[0].origin.getLong().toPrecision(longPres), "Max. safe T-O weight: " + SimCargoController.selectedJob.craft.getFlightConfig(SimCargoController.selectedJob.flights[i].config).weight + "lb", false, "n");
                     SimCargoController.addToUiList("cwe" + i.toString(), "Pilot Weight: " + SimCargoController.pilotWgt +"lb", "Cargo Weight: " + SimCargoController.selectedJob.cargoWgt+"lb", "Fuel Weight: " + SimCargoController.getFuelReq(SimCargoController.getDistanceBetweenPorts(
                         SimCargoController.selectedJob.flights[i].origin, SimCargoController.selectedJob.flights[i].destination), SimCargoController.selectedJob.craft).toString() +"lb", false, "n");
 
@@ -652,7 +653,7 @@ class SimCargoController {
                     if(SimCargoController.selectedJob.flights[i].destination.hasIls())
                         ilsLine = "ILS landing AVAILABLE";
 
-                    SimCargoController.addToUiList("cl" + i.toString(), "Land at " + SimCargoController.selectedJob.flights[i].destination.getCode(), "Location: " + SimCargoController.selectedJob.endingAt.getLat().toPrecision(5) + ", " + SimCargoController.selectedJob.endingAt.getLong().toPrecision(longPres), ilsLine, false, "b");
+                    SimCargoController.addToUiList("cl" + i.toString(), "Landing " + SimCargoController.selectedJob.flights[i].destination.getCode() + ", " + SimCargoController.selectedJob.flights[i].destination.getAlt() + "ft", "Location: " + SimCargoController.selectedJob.endingAt.getLat().toPrecision(5) + ", " + SimCargoController.selectedJob.endingAt.getLong().toPrecision(longPres), ilsLine, false, "b");
                 }
 
                 SimCargoController.setBtns("Back", "Complete Job");
@@ -761,11 +762,11 @@ class SimCargoController {
         };
     }
 
-    static getNearbyPorts(p: CargoPort){
-        let cfg = SimCargoController.checkPortViability(p, SimCargoController.cargoCrafts[0]);
+    static getNearbyPorts(p: CargoPort, c:CargoCraft){
+        let cfg = SimCargoController.checkPortViability(p, c);
         if (cfg < 0) return -1;
 
-        let rangeLimit = Math.min(180, SimCargoController.getMaxRange(SimCargoController.cargoCrafts[0], 50, cfg));
+        let rangeLimit = Math.min(180, SimCargoController.getMaxRange(c, 50, cfg));
 
         let minLat = p.getLat() - SimCargoController.estimateDistanceLatLimit(rangeLimit);
         let maxLat = p.getLat() + SimCargoController.estimateDistanceLatLimit(rangeLimit);
@@ -787,15 +788,14 @@ class SimCargoController {
         return portsNear;
     }
 
-    static testAllPorts(){
-        console.log("The following ports may have LESS than two ports visitable!");
-
+    static testAllPorts(n:number){
+        console.log("The following ports may have LESS than two ports visitable with " + SimCargoController.cargoCrafts[n].getName());
         for (let i = 0; i < SimCargoController.cargoPorts.length; i++) {
-            let x = SimCargoController.getNearbyPorts(SimCargoController.cargoPorts[i]);
-            if (x < 2 && x > -1) console.log(SimCargoController.cargoPorts[i]);
+            let x = SimCargoController.getNearbyPorts(SimCargoController.cargoPorts[i], SimCargoController.cargoCrafts[n]);
+            if (x < 2 && x > -1) console.log(SimCargoController.cargoPorts[i].getCode() + " @ " + SimCargoController.cargoPorts[i].getAlt() + "ft");
         }
     }
-
+    
     static init() {
         SimCargoController.uiMode = "x";
 
@@ -807,7 +807,7 @@ class SimCargoController {
         SimCargoController.pilotWgt = 170;
         
         SimCargoController.portFiles = ["us"];
-        SimCargoController.craftFiles = ["C152", "XCub", "C172", "BBG36", "C208"];
+        SimCargoController.craftFiles = ["C152", "XCub", "C172", "BBG36", "C208", "DA62"];
 
         SimCargoController.tempIndex = 0;
 
@@ -914,8 +914,10 @@ class CargoPort {
                 return 0;
             case "m":
                 return 1;
-            case "b":
+            case "g":
                 return 2;
+            case "h":
+                return 3;
         }
     }
 
@@ -1060,8 +1062,10 @@ class CargoCraft {
                 return 0;
             case "m":
                 return 1;
-            case "b":
+            case "g":
                 return 2;
+            case "h":
+                return 3;
         }
     }
 }
