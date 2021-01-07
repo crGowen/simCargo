@@ -533,9 +533,9 @@ var SimCargoController = (function () {
                     var longPres = 5;
                     if (Math.abs(SimCargoController.selectedJob.flights[0].origin.getLong()) >= 100)
                         longPres = 6;
-                    SimCargoController.addToUiList("ct" + i.toString(), "Take-off " + SimCargoController.selectedJob.flights[i].origin.getCode() + ", " + SimCargoController.selectedJob.flights[i].origin.getAlt() + "ft", "Location: " + SimCargoController.selectedJob.flights[0].origin.getLat().toPrecision(5) + ", " + SimCargoController.selectedJob.flights[0].origin.getLong().toPrecision(longPres), "Max. safe T-O weight: " + SimCargoController.selectedJob.craft.getFlightConfig(SimCargoController.selectedJob.flights[i].config).weight + "lb", false, "n");
+                    SimCargoController.addToUiList("ct" + i.toString(), "Take-off " + SimCargoController.selectedJob.flights[i].origin.getCode() + ", " + SimCargoController.selectedJob.flights[i].origin.getAlt() + "ft", "Location: " + SimCargoController.selectedJob.flights[0].origin.getLat().toPrecision(5) + ", " + SimCargoController.selectedJob.flights[0].origin.getLong().toPrecision(longPres), "Max. T-O wgt: " + SimCargoController.selectedJob.craft.getFlightConfig(SimCargoController.selectedJob.flights[i].config).weight + "lb", false, "n");
                     SimCargoController.addToUiList("cwe" + i.toString(), "Pilot Weight: " + SimCargoController.pilotWgt + "lb", "Cargo Weight: " + SimCargoController.selectedJob.cargoWgt + "lb", "Fuel Weight: " + SimCargoController.getFuelReq(SimCargoController.getDistanceBetweenPorts(SimCargoController.selectedJob.flights[i].origin, SimCargoController.selectedJob.flights[i].destination), SimCargoController.selectedJob.craft).toString() + "lb", false, "n");
-                    SimCargoController.addToUiList("cwt" + i.toString(), "", "Expected T-O Weight: " + SimCargoController.getReqWgt(SimCargoController.selectedJob.flights[i].origin, SimCargoController.selectedJob.flights[i].destination, SimCargoController.selectedJob.craft, SimCargoController.selectedJob.cargoWgt) + "lb", "", false, "n");
+                    SimCargoController.addToUiList("cwt" + i.toString(), "", "Exp T-O Wgt: " + SimCargoController.getReqWgt(SimCargoController.selectedJob.flights[i].origin, SimCargoController.selectedJob.flights[i].destination, SimCargoController.selectedJob.craft, SimCargoController.selectedJob.cargoWgt) + "lb", "", false, "n");
                     if (Math.abs(SimCargoController.selectedJob.flights[0].destination.getLong()) >= 100)
                         longPres = 6;
                     else
@@ -673,7 +673,7 @@ var SimCargoController = (function () {
         SimCargoController.fudge = 1.15;
         SimCargoController.pilotWgt = 170;
         SimCargoController.portFiles = ["us"];
-        SimCargoController.craftFiles = ["C152", "XCub", "C172", "BBG36", "C208", "DA62"];
+        SimCargoController.craftFiles = ["C152", "XCub", "C172", "BBG36", "C208", "DA62", "BKA350", "TBM"];
         SimCargoController.tempIndex = 0;
         short.byId("scListCon").addEventListener("click", SimCargoController.listHandler);
         SimCargoController.parseAirportsFile();

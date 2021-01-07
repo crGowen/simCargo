@@ -1,0 +1,38 @@
+Everything before the plus sign is ignored by data read (do not include the plus sign anywhere else). Use this space to include any comments.
+
+flight config format: <takeoff weight>, <alt>, <rwy length>, <is firm surface?>,
+
++
+Cessna_Citation_CJ4,
+m,
+10280,
+450,
+7600000,
+40000,
+8.80,
+800,
+5760,
+
+7,
+
+Passenger_1, 100,
+Passenger_2, 100,
+Passenger_3, 100,
+Passenger_4, 100,
+Passenger_5, 100,
+Baggage_1, 200,
+Baggage_2, 150,
+
+2,
+
+15500, 9100, 7100, y,
+17060, 4200, 5400, y,
+
+
+
+
+
+
+
+
+

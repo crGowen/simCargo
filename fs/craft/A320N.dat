@@ -1,0 +1,38 @@
+Everything before the plus sign is ignored by data read (do not include the plus sign anywhere else). Use this space to include any comments.
+
+flight config format: <takeoff weight>, <alt>, <rwy length>, <is firm surface?>,
+
++
+Airbus_A320neo,
+g,
+90400,
+450,
+14000000,
+40000,
+24.8,
+7500,
+46900,
+
+4,
+
+Business_Class, 6000,
+Forward_Baggage, 7000,
+Economy_Class, 9000,
+Rear_Baggage, 14000,
+
+4,
+
+139000, 500, 12100, y,
+125000, 500, 8400, y,
+145000, 500, 14500, y,
+135000, 4200, 12000, y,
+
+
+
+
+
+
+
+
+
+
